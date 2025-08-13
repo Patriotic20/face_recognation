@@ -1,0 +1,57 @@
+services:
+  hikivisionconnection:
+    build:
+      context: ./HikiVisionConnection
+    image: hikivisionconnection:latest
+    container_name: HikiVisionConnection
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    volumes:
+      - ./HikiVisionConnection:/app
+
+  hikivisionfastapi:
+    build:
+      context: ./HikiVisionFastApi
+    image: hikivisionfastapi:latest
+    container_name: HikiVisionFastApi
+    depends_on:
+      - rabbitmq
+      - postgres
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: mydb
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypass
+    volumes:
+      - ./HikiVisionFastApi:/app
+    ports:
+      - "8000:8000" 
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"   
+      - "15672:15672" 
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: db
+      POSTGRES_USER: db
+      POSTGRES_PASSWORD: face_reg
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
