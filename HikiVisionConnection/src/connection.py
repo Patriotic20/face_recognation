@@ -39,7 +39,7 @@ class HikiVisionConnection:
         self.device_ip = device_ip
         self.username = username
         self.password = password
-        self.url = f"http://{self.device_ip}/ISAPI/Event/notification/alertStream?format=json"
+        self.url = f"http://192.168.0.51/ISAPI/Event/notification/alertStream?format=json"
         self.boundary = b"--MIME_boundary"
         self.camera_type = camera_type
         

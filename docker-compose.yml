@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   hikivisionconnection:
     build:
@@ -5,7 +7,8 @@ services:
     image: hikivisionconnection:latest
     container_name: HikiVisionConnection
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
     environment:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
     volumes:
@@ -17,29 +20,34 @@ services:
     image: hikivisionfastapi:latest
     container_name: HikiVisionFastApi
     depends_on:
-      - rabbitmq
-      - postgres
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     environment:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: mydb
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypass
+      APP_CONFIG__DB__URL: postgresql+asyncpg://db:face_reg@postgres:5432/db
+      # ↑ matches postgres container config
     volumes:
       - ./HikiVisionFastApi:/app
     ports:
-      - "8000:8000" 
+      - "8000:8000"
 
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
-      - "5672:5672"   
-      - "15672:15672" 
+      - "5672:5672"
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
 
   postgres:
     image: postgres:16
@@ -50,8 +58,14 @@ services:
       POSTGRES_DB: db
       POSTGRES_USER: db
       POSTGRES_PASSWORD: face_reg
+    restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U db -d db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:
