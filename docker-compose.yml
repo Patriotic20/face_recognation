@@ -4,11 +4,13 @@ services:
   hikivisionconnection:
     build:
       context: ./HikiVisionConnection
+
     image: hikivisionconnection:latest
     container_name: HikiVisionConnection
     depends_on:
       rabbitmq:
         condition: service_healthy
+    network_mode: "host"
     environment:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
     volumes:
