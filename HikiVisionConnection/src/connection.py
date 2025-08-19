@@ -5,7 +5,8 @@ from datetime import datetime
 import json
 import traceback
 from schemas import EnterEvent
-from producer import init_rabbit, close_rabbit, publish_event
+from producer import init_rabbit , close_rabbit , publish_event
+
 
 
 CAMERAS = [
@@ -20,38 +21,43 @@ CAMERAS = [
         "username": "admin",
         "password": "nokia113",
         "camera_type": "exit"
-    }
+    },
+    # {
+    #     "device_ip": "192.168.10.5",
+    #     "username": "admin",
+    #     "password": "nokia113",
+    #     "camera_type": "enter"
+    # },
+    # {
+    #     "device_ip": "192.168.10.6",
+    #     "username": "admin",
+    #     "password": "nokia113",
+    #     "camera_type": "exit"
+    # }
 ]
 
 
 class HikiVisionConnection:
-    def __init__(self, device_ip: str, username: str, password: str, camera_type: str):
+    def __init__(self, device_ip: str , username:str, password:str ,camera_type: str):
         self.device_ip = device_ip
         self.username = username
         self.password = password
         self.url = f"http://{self.device_ip}/ISAPI/Event/notification/alertStream?format=json"
         self.boundary = b"--MIME_boundary"
         self.camera_type = camera_type
+        
 
     async def connection_stream(self):
         """Connect to Hikvision device and yield each multipart 'part' as bytes."""
         auth = httpx.DigestAuth(self.username, self.password)
 
-        # ✅ Correct timeout handling for httpx >= 0.28
-        timeout = httpx.Timeout(
-            connect=10.0,
-            read=None,   # None = wait forever for stream data
-            write=10.0,
-            pool=10.0
-        )
-
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        async with httpx.AsyncClient(timeout=None) as client:
             async with client.stream("GET", self.url, auth=auth) as response:
                 if response.status_code != 200:
                     print(f"[ERROR] Failed to connect: {response.status_code}")
                     return
 
-                print(f"[INFO] Connected to {self.device_ip}. Waiting for events...")
+                print("[INFO] Connected. Waiting for events...")
 
                 buffer = b""
                 async for chunk in response.aiter_bytes():
@@ -69,7 +75,7 @@ class HikiVisionConnection:
                             yield part
 
     def save_image(self, image_bytes: bytes):
-        """Save image to images/ with timestamp."""
+        """Save image to images/ with timestamp and update user log."""
         os.makedirs("images", exist_ok=True)
         filename = f"images/{datetime.now():%Y%m%d_%H%M%S_%f}.jpg"
         with open(filename, "wb") as f:
@@ -96,51 +102,51 @@ class HikiVisionConnection:
                 if event_type == "AccessControllerEvent":
                     name = json_data.get("AccessControllerEvent", {}).get("name")
                     person = name if name else "unknown"
-
-                    if person != "unknown":
+                    
+                    if person == "unknown":
+                        pass
+                    else:
                         event = EnterEvent(
-                            user_id=person,
+                            user_id=person, 
                             time=dt,
                             camera_type=self.camera_type
-                        )
+                            )
                         await publish_event(event=event)
-                        print(f"[✅] Published AccessControllerEvent: {event.model_dump()}")
+                        print(f"[✅] Published AccessControllerEvent: {event.model_dump()}, data: {json_data}")
 
                 elif event_type == "Non-AccessControllerEvent":
-                    print(f"[ℹ️] Ignored Non-AccessControllerEvent")
+                    print(f"[ℹ️] Ignored Non-AccessControllerEvent: {json_data}")
 
                 else:
-                    print(f"[WARN] Unknown event type: {event_type}")
+                    print(f"[WARN] Unknown event type: {event_type}, data: {json_data}")
 
             except Exception as e:
                 print(f"[ERROR] Failed to parse JSON: {e}")
                 print(traceback.format_exc())
 
-        elif "image/jpeg" in headers_raw:
-            self.save_image(content)
-
+        # elif "image/jpeg" in headers_raw:
+        #     self.save_image(content)
         else:
             print("[WARN] Unknown content type in part")
 
+
     async def stream_events(self):
-        """Main loop: keep streaming and auto-reconnect on failure."""
-        while True:
-            try:
-                async for part in self.connection_stream():
-                    await self.process_part(part)
-            except Exception as e:
-                print(f"[ERROR] Streaming error on {self.device_ip}: {e}")
-                print(traceback.format_exc())
-                print("[INFO] Reconnecting in 5 seconds...")
-                await asyncio.sleep(5)
+        """Main loop: read parts from the stream and process them."""
+        try:
+            async for part in self.connection_stream():
+                await self.process_part(part)
+        except Exception as e:
+            print(f"[ERROR] Streaming error: {e}")
+            print(traceback.format_exc())
 
 
 async def main():
     await init_rabbit()
 
-    connections = [HikiVisionConnection(**cam) for cam in CAMERAS]
+    connections = [
+        HikiVisionConnection(**cam) for cam in CAMERAS
+    ]
 
-    # Run all connections concurrently
     await asyncio.gather(*(conn.stream_events() for conn in connections))
 
     await close_rabbit()
