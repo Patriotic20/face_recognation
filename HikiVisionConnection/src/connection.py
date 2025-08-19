@@ -22,18 +22,18 @@ CAMERAS = [
         "password": "nokia113",
         "camera_type": "exit"
     },
-    {
-        "device_ip": "192.168.10.5",
-        "username": "admin",
-        "password": "nokia113",
-        "camera_type": "enter"
-    },
-    {
-        "device_ip": "192.168.10.6",
-        "username": "admin",
-        "password": "nokia113",
-        "camera_type": "exit"
-    }
+    # {
+    #     "device_ip": "192.168.10.5",
+    #     "username": "admin",
+    #     "password": "nokia113",
+    #     "camera_type": "enter"
+    # },
+    # {
+    #     "device_ip": "192.168.10.6",
+    #     "username": "admin",
+    #     "password": "nokia113",
+    #     "camera_type": "exit"
+    # }
 ]
 
 
