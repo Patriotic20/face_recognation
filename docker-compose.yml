@@ -4,17 +4,16 @@ services:
   hikivisionconnection:
     build:
       context: ./HikiVisionConnection
-
     image: hikivisionconnection:latest
     container_name: HikiVisionConnection
     depends_on:
       rabbitmq:
         condition: service_healthy
-    network_mode: "host"
     environment:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
     volumes:
       - ./HikiVisionConnection:/app
+    restart: unless-stopped
 
   hikivisionfastapi:
     build:
@@ -29,11 +28,11 @@ services:
     environment:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
       APP_CONFIG__DB__URL: postgresql+asyncpg://db:face_reg@postgres:5432/db
-      # ↑ matches postgres container config
     volumes:
       - ./HikiVisionFastApi:/app
     ports:
       - "8000:8000"
+    restart: unless-stopped
 
   rabbitmq:
     image: rabbitmq:3-management
