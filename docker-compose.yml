@@ -76,7 +76,7 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf  # nginx.conf faylini konteynerga ulaymiz
     depends_on:
-      - app
+      - hikivisionfastapi
 
 volumes:
   postgres_data:
