@@ -11,26 +11,29 @@ from producer import init_rabbit , close_rabbit , publish_event
 
 CAMERAS = [
     {
-        "device_ip": "192.168.0.51",
+        "device_ip": "192.168.10.1",
         "username": "admin",
         "password": "nokia113",
         "camera_type": "enter"
     },
-    # {
-    #     "device_ip": "192.168.1.102",
-    #     "username": "admin",
-    #     "password": "12345",
-    #     "url": "http://192.168.1.102/ISAPI/Event/notification/stream",
-    #     "camera_type": "exit"
-    # },
-    # {
-    #     "device_ip": "192.168.1.103",
-    #     "username": "admin",
-    #     "password": "12345",
-    #     "url": "http://192.168.1.103/ISAPI/Event/notification/stream",
-    #     "camera_type": "enter"
-    # },
-    # # Add as many as you want
+    {
+        "device_ip": "192.168.10.2",
+        "username": "admin",
+        "password": "12345",
+        "camera_type": "exit"
+    },
+    {
+        "device_ip": "192.168.10.5",
+        "username": "admin",
+        "password": "12345",
+        "camera_type": "enter"
+    },
+    {
+        "device_ip": "192.168.10.6",
+        "username": "admin",
+        "password": "12345",
+        "camera_type": "exit"
+    }
 ]
 
 
@@ -39,7 +42,7 @@ class HikiVisionConnection:
         self.device_ip = device_ip
         self.username = username
         self.password = password
-        self.url = f"http://192.168.0.51/ISAPI/Event/notification/alertStream?format=json"
+        self.url = f"http://{self.device_ip}/ISAPI/Event/notification/alertStream?format=json"
         self.boundary = b"--MIME_boundary"
         self.camera_type = camera_type
         
