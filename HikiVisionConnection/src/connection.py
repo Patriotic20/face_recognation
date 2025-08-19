@@ -11,13 +11,13 @@ from producer import init_rabbit , close_rabbit , publish_event
 
 CAMERAS = [
     {
-        "device_ip": "192.168.88.1",
+        "device_ip": "192.168.88.101",
         "username": "admin",
         "password": "nokia113",
         "camera_type": "enter"
     },
     {
-        "device_ip": "192.168.88.2",
+        "device_ip": "192.168.88.102",
         "username": "admin",
         "password": "nokia113",
         "camera_type": "exit"
