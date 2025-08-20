@@ -30,8 +30,8 @@ CAMERAS = [
     # },
     # {
     #     "device_ip": "192.168.10.6",
-    #     "username": "admin",
-    #     "password": "nokia113",
+            # "username": "admin",
+            # "password": "nokia113",
     #     "camera_type": "exit"
     # }
 ]
@@ -57,7 +57,7 @@ class HikiVisionConnection:
                     print(f"[ERROR] Failed to connect: {response.status_code}")
                     return
 
-                print("[INFO] Connected. Waiting for events...")
+                print(f"[INFO] Connected to {self.device_ip}. Waiting for events...")
 
                 buffer = b""
                 async for chunk in response.aiter_bytes():
@@ -131,13 +131,21 @@ class HikiVisionConnection:
 
 
     async def stream_events(self):
-        """Main loop: read parts from the stream and process them."""
-        try:
-            async for part in self.connection_stream():
-                await self.process_part(part)
-        except Exception as e:
-            print(f"[ERROR] Streaming error: {e}")
-            print(traceback.format_exc())
+        """Main loop: read parts from the stream and process them. Includes reconnection logic."""
+        while True:
+            try:
+                print(f"[INFO] Attempting to connect to {self.device_ip}...")
+                async for part in self.connection_stream():
+                    await self.process_part(part)
+            except (httpx.ConnectError, httpx.ReadError) as e:
+                print(f"[ERROR] Connection to {self.device_ip} failed: {e}")
+                print(f"[INFO] Retrying connection in 30 seconds...")
+                await asyncio.sleep(30)
+            except Exception as e:
+                print(f"[ERROR] Unhandled streaming error from {self.device_ip}: {e}")
+                print(traceback.format_exc())
+                print(f"[INFO] Retrying connection in 30 seconds...")
+                await asyncio.sleep(30)
 
 
 async def main():
