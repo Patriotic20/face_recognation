@@ -27,8 +27,8 @@ class UserCrudService:
     async def get_all_users(self , limit: int = 20 , offset : int = 0):
         return await self.service.get_all(model=User , limit=limit , offset=offset)
     
-    async def update_user(self, user_id: int , user_data: UserUpdate):
-        return await self.service.update(model=User , item_id=user_id , obj_items=user_data)
+    async def update_user(self, user_id: int , user_name: str):
+        return await self.service.update_by_field(item_id=user_id , model=User , field_name="username" , field_value=user_name)
     
     async def delete_user(self , user_id: str):
         return await self.service.delete(model=User , item_id=user_id)

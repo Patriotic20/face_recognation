@@ -84,3 +84,66 @@ class UserService:
             )
 
         return {"user": user, "hikvision_status": {"success": successes, "failed": errors}}
+
+    async def get_user_by_id(self , user_id: str):
+        return await self.service.get_user_by_id(user_id=user_id)
+        
+        
+    async def get_all_user(self, limit: int = 0 , offset: int = 0):
+        return await self.service.get_all_users(limit=limit , offset=offset)
+
+
+    async def update_user_and_hiki(self, user_id: str, new_name: str):
+        successes, errors = [], []
+
+        # Try updating all Hikvision devices first
+        for client in self.hikivision_clients:
+            success = await client.modify_user(
+                user_id=user_id,
+                new_name=new_name,
+            )
+            if success:
+                successes.append(client.ip_address)
+            else:
+                errors.append(client.ip_address)
+
+        # Update DB only if at least one device succeeded
+        if successes:
+            update_data = await self.service.update_user(
+                user_id=user_id, 
+                user_name=new_name
+            )
+        else:
+            update_data = None  # no update since all failed
+
+        return {
+            "update_data": update_data,
+            "successes": successes,
+            "errors": errors,
+        }
+        
+        
+    async def delete_user_in_hiki(self, user_id: str):
+        successes, errors = [], []
+
+        # Try deleting user on all Hikvision devices first
+        for client in self.hikivision_clients:
+            success = await client.delete_user(user_id=user_id)
+            if success:
+                successes.append(client.ip_address)
+            else:
+                errors.append(client.ip_address)
+
+        # Delete from DB only if at least one device succeeded
+        if successes:
+            await self.service.delete_user(user_id=user_id)
+            db_deleted = True
+        else:
+            db_deleted = False
+
+        return {
+            "db_deleted": db_deleted,
+            "successes": successes,
+            "errors": errors,
+        }
+
