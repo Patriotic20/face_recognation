@@ -1,9 +1,11 @@
 from pydantic_settings import BaseSettings
 from pydantic import BaseModel, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from dotenv import load_dotenv
+from dotenv import load_dotenv 
+
 
 load_dotenv()
+
 
 
 class ApiV1Routes(BaseModel):
@@ -24,8 +26,17 @@ class ServerConfig(BaseModel):
 class HikiVisionCongif(BaseModel):
     username: str
     password: str
-    device_ip: str
-    url: str
+    
+    
+    
+class JwtConfig(BaseModel):
+    access_secret_key: str        
+    refresh_secret_key: str
+    algorithm: str
+    access_token_minutes: int
+    refresh_token_days: int  
+    
+    
 
 
 class DatabaseConfig(BaseModel):
@@ -55,6 +66,9 @@ class AppSettings(BaseSettings):
     server: ServerConfig = ServerConfig()
     api: ApiRoutes = ApiRoutes()
     db: DatabaseConfig
+    camera: HikiVisionCongif
+    jwt: JwtConfig
+
     
 
 

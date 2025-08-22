@@ -65,6 +65,7 @@ async def main():
 async def lifespan(app: FastAPI):
     task = asyncio.create_task(main())
     print("[Lifespan] RabbitMQ consumer started.")
+        
     try:
         yield
     finally:
@@ -74,6 +75,7 @@ async def lifespan(app: FastAPI):
         except asyncio.CancelledError:
             pass
         print("[Lifespan] RabbitMQ consumer stopped.")
+        
 
 # if __name__ == "__main__":
 #     asyncio.run(main())
