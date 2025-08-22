@@ -5,33 +5,41 @@ from datetime import datetime
 import json
 import traceback
 from schemas import EnterEvent
+from config import settings
 from producer import init_rabbit , close_rabbit , publish_event
 
 
 
 CAMERAS = [
+    
+    # {
+    #     "device_ip": "192.168.0.51",
+    #     "username": settings.camera.username,
+    #     "password": settings.camera.password,
+    #     "camera_type": "enter"
+    # }
     {
         "device_ip": "192.168.88.101",
-        "username": "admin",
-        "password": "nokia113",
+        "username": settings.camera.username,
+        "password": settings.camera.password,
         "camera_type": "enter"
     },
     {
         "device_ip": "192.168.88.102",
-        "username": "admin",
-        "password": "nokia113",
+        "username": settings.camera.username,
+        "password": settings.camera.password,
         "camera_type": "exit"
     },
     {
         "device_ip": "192.168.88.105",
-        "username": "admin",
-        "password": "nokia113",
+        "username": settings.camera.username,
+        "password": settings.camera.password,
         "camera_type": "enter"
     },
     {
         "device_ip": "192.168.88.106",
-        "username": "admin",
-        "password": "nokia113",
+        "username": settings.camera.username,
+        "password": settings.camera.password,
         "camera_type": "exit"
     }
 ]
@@ -100,7 +108,7 @@ class HikiVisionConnection:
                 dt = json_data.get("dateTime")
 
                 if event_type == "AccessControllerEvent":
-                    name = json_data.get("AccessControllerEvent", {}).get("name")
+                    name = json_data.get("AccessControllerEvent", {}).get("employeeNoString")
                     person = name if name else "unknown"
                     
                     if person == "unknown":
