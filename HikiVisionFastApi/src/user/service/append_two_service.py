@@ -8,6 +8,7 @@ from user.utils.make_random_code import make_random_code
 from core.config import settings
 from user.utils.file import save_file
 from user.utils.image import compress_image_for_hikvision
+from auth.utils import get_user
 
 
 class UserService:
@@ -29,6 +30,16 @@ class UserService:
         ]
 
     async def create_and_add_user_with_file(self, username: str, file: UploadFile):
+        
+        exit_user = await get_user(session=self.session, username=username)
+        if exit_user:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Username already used"
+            )
+        
+        
+        
         # Save → Compress
         saved_path = await save_file(file)
         compressed_path = compress_image_for_hikvision(saved_path)
