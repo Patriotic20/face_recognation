@@ -17,7 +17,7 @@ def get_auth_service(session: AsyncSession = Depends(db_helper.session_getter)):
 async def register(
     credentials: UserRegister,
     service: AuthService = Depends(get_auth_service),
-    # _ = Depends(role_checker("admin"))
+    _ = Depends(role_checker("admin"))
     
 ):
     return await service.register(credentials=credentials)

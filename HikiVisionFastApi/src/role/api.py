@@ -19,7 +19,7 @@ def get_role_service(session: AsyncSession = Depends(db_helper.session_getter)):
 async def create(
     role_data: RoleCreate,
     service: RoleService = Depends(get_role_service),
-    # _: User = Depends(role_checker("admin"))
+    _: User = Depends(role_checker("admin"))
 ):
     return await service.create_role(role_data=role_data)
 
