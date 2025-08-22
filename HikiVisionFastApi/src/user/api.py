@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional, List
 
 from .service.append_two_service import UserService
+from .service.user_crud_service import UserCrudService
 from core.utils.db_helper import db_helper
 from auth.utils import role_checker
 from core.models import User
@@ -17,6 +18,10 @@ def get_user_service(
 ) -> UserService:
     return UserService(session=session, devices=device_ip)
 
+def get_crud_service(
+    session: AsyncSession = Depends(db_helper.session_getter)
+)-> UserCrudService:
+    return UserCrudService(session=session)
 
 
 @router.post("/create")
@@ -67,6 +72,14 @@ async def delete_user(
     return await service.delete_user_in_hiki(user_id=user_id)
 
 
-    
+
+@router.delete("/delete/db/{user_id}")
+async def delete_user(
+    user_id: str,
+    service: UserCrudService = Depends(get_crud_service),
+    _: User = Depends(role_checker("admin")),
+):
+    return await service.delete_user(user_id=user_id)
+
 
 
