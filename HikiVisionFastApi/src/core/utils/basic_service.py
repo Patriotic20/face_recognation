@@ -81,24 +81,46 @@ class BasicService(Generic[ModelType, SchemaType]):
             await self.db.rollback()
             raise e
 
-    async def update(self, model: Type[ModelType], item_id: int, obj_items: SchemaType):
+    async def update(
+        self, 
+        model: Type[ModelType], 
+        obj_items: SchemaType,  
+        item_id: int | None = None, 
+        user_id: str | None = None
+    ):
         try:
-            log.debug(f"Updating {model.__name__} ID={item_id} with data: {obj_items}")
-            db_obj = await self.get_by_id(model, item_id)
+            log.debug(f"Updating {model.__name__} ID={item_id}, UserID={user_id} with data: {obj_items}")
+
+            # Fetch object either by ID or user_id
+            db_obj = None
+            if item_id:
+                db_obj = await self.get_by_id(model, item_id)
+            if user_id:
+                db_obj = await self.get_by_field(model=model, field_name="user_id", field_value=user_id)
+
             if not db_obj:
-                log.warning(f"{model.__name__} with ID {item_id} not found for update")
+                log.warning(f"{model.__name__} with ID={item_id} or UserID={user_id} not found for update")
                 return None
-            for key, value in obj_items.model_dump(exclude_unset=True).items():
-                if value in [None, "", "string"]:
-                    continue
+
+            # Extract only valid values
+            valid_data = {
+                key: value
+                for key, value in obj_items.model_dump(exclude_unset=True).items()
+                if value not in (None, "", "string")
+            }
+
+            # Apply updates
+            for key, value in valid_data.items():
                 setattr(db_obj, key, value)
+
             await self.db.commit()
-            log.info(f"{model.__name__} with ID {item_id} updated")
+            log.info(f"{model.__name__} updated successfully (ID={item_id}, UserID={user_id})")
             return db_obj
-        except SQLAlchemyError as e:
-            log.exception(f"Failed to update {model.__name__} ID {item_id}")
+
+        except SQLAlchemyError:
+            log.exception(f"Failed to update {model.__name__} (ID={item_id}, UserID={user_id})")
             await self.db.rollback()
-            raise e
+            raise
 
     async def update_by_field(
         self,

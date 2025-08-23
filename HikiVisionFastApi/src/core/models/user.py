@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .user_logs import UserLog
     from .role import Role
+    from .user_info import UserInfo
 
 
 
@@ -23,3 +24,4 @@ class User(Base):
     
     user_logs: Mapped[list["UserLog"]] = relationship("UserLog" , back_populates="user")
     role: Mapped["Role"] = relationship("Role" , back_populates="user")
+    user_info: Mapped["UserInfo"] = relationship("UserInfo" , back_populates="user")
