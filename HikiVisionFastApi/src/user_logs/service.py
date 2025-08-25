@@ -1,9 +1,11 @@
 from core.utils.basic_service import BasicService
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.models import UserLog
-from .schemas import UserLogEnterCreate
+from .schemas import UserLogEnterCreate 
 from datetime import datetime
 from sqlalchemy import select , desc
+from sqlalchemy.orm import joinedload
+
 
 class UserLogService:
     def __init__(self , session:AsyncSession):
@@ -41,8 +43,17 @@ class UserLogService:
         limit: int = 10,
         offset: int = 0
         ):
-        return await self.service.get_all(model=UserLog , limit=limit , offset=offset)
-
+        stmt = (
+            select(UserLog)
+            .options(
+                joinedload(UserLog.user)
+            )
+            .limit(limit)
+            .offset(offset)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
+        
     async def update_user_logs(self, user_id: str, field_name: str ,field_value: any):
         return await self.service.update_by_field(model=UserLog, user_id=user_id , field_name=field_name , field_value=field_value)
     

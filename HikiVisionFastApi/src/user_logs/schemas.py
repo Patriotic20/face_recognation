@@ -1,5 +1,6 @@
-from pydantic import BaseModel , field_validator
+from pydantic import BaseModel , field_validator , ConfigDict
 from datetime import datetime, timezone, timedelta
+from user.schemas import UserBase
 
 class UserLogBase(BaseModel):
     enter_time: datetime
@@ -19,3 +20,14 @@ class UserLogEnterCreate(BaseModel):
                 return value.replace(tzinfo=tz_plus_8)
             return value.astimezone(tz_plus_8)
         return value
+
+
+class UserLogsResponse(BaseModel):
+    id: int
+    user: UserBase | None = None
+    enter_time: datetime
+    exit_time: datetime
+    
+    model_config = ConfigDict(from_attributes=True)  
+    
+    
