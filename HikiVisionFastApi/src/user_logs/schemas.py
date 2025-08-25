@@ -26,8 +26,8 @@ UTC_PLUS_5 = timezone(timedelta(hours=5))
 class UserLogsResponse(BaseModel):
     id: int
     user: UserBase | None = None
-    enter_time: datetime
-    exit_time: datetime
+    enter_time: datetime | None = None
+    exit_time: datetime | None = None
     
     model_config = ConfigDict(from_attributes=True)  
     
