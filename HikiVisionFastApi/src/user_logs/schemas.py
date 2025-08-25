@@ -1,4 +1,4 @@
-from pydantic import BaseModel , field_validator , ConfigDict
+from pydantic import BaseModel , field_validator , ConfigDict , field_serializer
 from datetime import datetime, timezone, timedelta
 from user.schemas import UserBase
 
@@ -21,6 +21,7 @@ class UserLogEnterCreate(BaseModel):
             return value.astimezone(tz_plus_8)
         return value
 
+UTC_PLUS_5 = timezone(timedelta(hours=5))
 
 class UserLogsResponse(BaseModel):
     id: int
@@ -29,5 +30,12 @@ class UserLogsResponse(BaseModel):
     exit_time: datetime
     
     model_config = ConfigDict(from_attributes=True)  
+    
+    
+    @field_serializer("enter_time", "exit_time")
+    def convert_to_utc_plus_5(self, value: datetime) -> str:
+        if value is None:
+            return None
+        return value.astimezone(UTC_PLUS_5).isoformat()
     
     
