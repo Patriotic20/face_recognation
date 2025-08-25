@@ -1,6 +1,8 @@
 from PIL import Image
 import os
 from pathlib import Path
+from core.config import settings 
+from urllib.parse import urljoin
 
 def compress_image_for_hikvision(input_path: str, target_kb: int = 200, step: int = 5, resize_step: float = 0.9) -> str:
     
@@ -12,7 +14,9 @@ def compress_image_for_hikvision(input_path: str, target_kb: int = 200, step: in
         img.thumbnail((MAX_WIDTH, MAX_HEIGHT), Image.LANCZOS)
 
     quality = 95
-    output_path = str(Path(input_path).with_stem(Path(input_path).stem + "_compressed"))
+    
+    output_path = Path(input_path).with_stem(Path(input_path).stem + "_compressed")
+    output_url = urljoin(settings.http_url.base_url.rstrip("/") + "/", output_path.as_posix())
 
     while True:
         img.save(output_path, "JPEG", optimize=True, quality=quality)
@@ -29,5 +33,11 @@ def compress_image_for_hikvision(input_path: str, target_kb: int = 200, step: in
             new_size = (int(img.size[0] * resize_step), int(img.size[1] * resize_step))
             img = img.resize(new_size, Image.LANCZOS)
             quality = 95
+            
+    try:
+        os.remove(input_path)
+        print(f"🗑️ Deleted original file: {input_path}")
+    except Exception as e:
+        print(f"⚠️ Could not delete original file {input_path}: {e}")
 
-    return output_path
+    return output_url

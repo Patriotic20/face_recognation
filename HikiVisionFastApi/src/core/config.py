@@ -27,6 +27,10 @@ class HikiVisionCongif(BaseModel):
     username: str
     password: str
     
+
+class HttpBase(BaseModel):
+    base_url: str
+    
     
     
 class JwtConfig(BaseModel):
@@ -45,6 +49,7 @@ class DatabaseConfig(BaseModel):
     echo_pool: bool = False
     pool_size: int = 50
     max_overflow: int = 10
+
 
     naming_convention: dict[str, str] = {
         "ix": "ix_%(column_0_label)s",
@@ -68,6 +73,7 @@ class AppSettings(BaseSettings):
     db: DatabaseConfig
     camera: HikiVisionCongif
     jwt: JwtConfig
+    http: HttpBase
 
     
 

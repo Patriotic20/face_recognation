@@ -3,9 +3,12 @@ from core.config import settings
 from consumer import lifespan
 from router import router as api_router
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 
 app = FastAPI(lifespan=lifespan)
+
+app.mount("/uploads", StaticFiles(directory="uploads/"), name="uploads")
 
 origins = [
     "http://localhost:5173",
