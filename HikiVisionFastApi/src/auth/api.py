@@ -13,14 +13,6 @@ router = APIRouter(
 def get_auth_service(session: AsyncSession = Depends(db_helper.session_getter)):
     return AuthService(session=session)
 
-@router.post("/register")
-async def register(
-    credentials: UserRegister,
-    service: AuthService = Depends(get_auth_service),
-    _ = Depends(role_checker("admin"))
-    
-):
-    return await service.register(credentials=credentials)
 
 @router.post("/login")  
 async def login(
@@ -28,6 +20,18 @@ async def login(
     service: AuthService = Depends(get_auth_service)
 ):
     return await service.login(credentials=credentials)
+
+@router.post("/register")
+async def register(
+    credentials: UserRegister,
+    service: AuthService = Depends(get_auth_service),
+    _ = Depends(role_checker("admin"))
+    
+):
+    await service.register(credentials=credentials)
+    return {"message": "User created successfully"}
+
+
 
 @router.post("/refresh")  
 async def refresh(

@@ -7,10 +7,10 @@ from .service.user_crud_service import UserCrudService
 from .service.user_info_service import UserInfoService
 from core.utils.db_helper import db_helper
 from auth.utils import role_checker
-from .schemas import UserInfoBase
+from .schemas import UserInfoBase , UserBase , UserMe
 from core.models import User
 
-router = APIRouter(prefix="/users", tags=["Users"])
+router = APIRouter(prefix="/users")
 
 
 
@@ -26,7 +26,7 @@ def get_crud_service(
     return UserCrudService(session=session)
 
 
-@router.post("/create")
+@router.post("/create" , tags=["Users"])
 async def create_user(
     username: str = Form(...),
     file: UploadFile = File(...),
@@ -49,26 +49,35 @@ async def create_user(
     )
 
 
-@router.get("/{user_id}")
+@router.get("/{user_id}" , tags=["Users"] , response_model=UserMe)
 async def get_by_id(
     user_id: str,
     service: UserService = Depends(get_user_service),
     _: User = Depends(role_checker("admin")),
 ):
-    return await service.get_user_by_id(user_id=user_id)
+    user_data = await service.get_user_by_id(user_id=user_id)
+    return UserMe(
+        id=user_data.id,
+        username=user_data.username,
+        image_path=user_data.image_path,
+        role=user_data.role.name if user_data.role else None,
+        user_info=user_data.user_info
+    )
 
 
-@router.get("")
+@router.get("" , tags=["Users"] , response_model=list[UserBase])
 async def get_users(
     limit: int = Query(20, ge=1),
     offset: int = Query(0, ge=0),
+    administration: bool = Query(False),
     service: UserService = Depends(get_user_service),
     _: User = Depends(role_checker("admin")),
 ):
-    return await service.get_all_user(limit=limit, offset=offset)
+    return await service.get_all_user(administration=administration ,limit=limit, offset=offset)
+    
 
 
-@router.put("/update/{user_id}")
+@router.put("/update/{user_id}" , tags=["Users"])
 async def update_user(
     user_id: str,
     new_name: str = Form(...),
@@ -78,7 +87,7 @@ async def update_user(
     return await service.update_user_and_hiki(user_id=user_id, new_name=new_name)
 
 
-@router.delete("/delete/{user_id}")
+@router.delete("/delete/{user_id}" , tags=["Users"])
 async def delete_user(
     user_id: str,
     service: UserService = Depends(get_user_service),
@@ -88,13 +97,14 @@ async def delete_user(
 
 
 
-@router.delete("/delete/db/{user_id}")
+@router.delete("/delete/db/{user_id}", tags=["Users"] )
 async def delete_user(
     user_id: str,
     service: UserCrudService = Depends(get_crud_service),
     _: User = Depends(role_checker("admin")),
 ):
-    return await service.delete_user(user_id=user_id)
+    await service.delete_user(user_id=user_id)
+    return {"message": "Delete sucefully"}
 
 
 

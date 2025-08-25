@@ -2,8 +2,9 @@ from core.utils.basic_service import BasicService
 from fastapi import HTTPException , status
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..schemas import UserBase , UserUpdate
-from core.models import User
+from core.models import User , Role
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 class UserCrudService:
     def __init__(self , session: AsyncSession):
@@ -14,7 +15,14 @@ class UserCrudService:
         return await self.service.create(model=User , obj_items=user_data)
     
     async def get_user_by_id(self, user_id: str):
-        stmt = select(User).where(User.id == user_id)
+        stmt = (
+            select(User)
+            .options(
+                joinedload(User.user_info),
+                joinedload(User.role)   # load the whole Role relationship
+            )
+            .where(User.id == user_id)
+        )
         result = await self.session.execute(stmt)
         user_data = result.scalars().first()
         if not user_data:
@@ -23,10 +31,26 @@ class UserCrudService:
                 detail="User not found"
             )
         return user_data
+
         
-    async def get_all_users(self , limit: int = 20 , offset : int = 0):
-        return await self.service.get_all(model=User , limit=limit , offset=offset)
-    
+    async def get_all_users(
+        self, administration: bool, limit: int = 20, offset: int = 0
+    ):
+        if administration:
+            condition = (User.role_id.is_not(None), User.password.is_not(None))
+        else:
+            condition = (User.role_id.is_(None), User.password.is_(None))
+
+        stmt = (
+            select(User)
+            .where(*condition)
+            .limit(limit)
+            .offset(offset)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
+
+        
     async def update_user(self, user_id: int , user_name: str):
         return await self.service.update_by_field(item_id=user_id , model=User , field_name="username" , field_value=user_name)
     

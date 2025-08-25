@@ -128,8 +128,8 @@ class UserService:
         return await self.service.get_user_by_id(user_id=user_id)
         
         
-    async def get_all_user(self, limit: int = 0 , offset: int = 0):
-        return await self.service.get_all_users(limit=limit , offset=offset)
+    async def get_all_user(self,administration: bool ,limit: int = 0 , offset: int = 0):
+        return await self.service.get_all_users(administration=administration ,limit=limit , offset=offset)
 
 
     async def update_user_and_hiki(self, user_id: str, new_name: str):
