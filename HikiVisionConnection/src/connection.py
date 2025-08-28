@@ -31,6 +31,18 @@ CAMERAS = [
         "camera_type": "exit"
     },
     {
+        "device_ip": "192.168.88.103",
+        "username": settings.camera.username,
+        "password": settings.camera.password,
+        "camera_type": "enter"
+    },
+    {
+        "device_ip": "192.168.88.104",
+        "username": settings.camera.username,
+        "password": settings.camera.password,
+        "camera_type": "exit"
+    },
+    {
         "device_ip": "192.168.88.105",
         "username": settings.camera.username,
         "password": settings.camera.password,
