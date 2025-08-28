@@ -3,7 +3,7 @@ __all__ = (
     "User",
     "Role",
     "UserLog",
-    "UserInfo"
+    "UserInfo",
     
 )
 

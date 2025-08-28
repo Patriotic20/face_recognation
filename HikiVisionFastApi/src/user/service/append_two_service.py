@@ -10,14 +10,15 @@ from core.config import settings
 from user.utils.file import save_file
 from user.utils.image import compress_image_for_hikvision
 from auth.utils import get_user
-
+from urllib.parse import urlparse
 
 class UserService:
     default_devices = [
-        "192.168.88.101",
-        "192.168.88.102",
-        "192.168.88.105",
-        "192.168.88.106",
+        "192.168.0.51",
+        # "192.168.88.101",
+        # "192.168.88.102",
+        # "192.168.88.105",
+        # "192.168.88.106",
     ]
     
     def __init__(self, session: AsyncSession, devices: list[str] | None = None):
@@ -68,6 +69,8 @@ class UserService:
 
     async def create_and_add_user(self, user_data: UserCreate):
         user_id = make_random_code()
+        
+        
 
         # Create user
         user = await self.service.create_user(
@@ -95,14 +98,15 @@ class UserService:
                 passport_serial=user_data.passport_serial,
             )
         )
-
+        
+        image_url_path = urlparse(user_data.image_path).path.lstrip("/")
         # Register user on Hikvision devices
         successes, errors = [], []
         for client in self.hikivision_clients:
             if await client.register_with_face(
                 user_id=str(user.id),
                 user_name=user.username,
-                image_path=user_data.image_path,
+                image_path=image_url_path,
             ):
                 successes.append(client.ip_address)
             else:

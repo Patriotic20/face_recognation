@@ -32,19 +32,6 @@ class HikiUserService:
                     "beginTime": "2020-01-01T00:00:00",
                     "endTime": "2037-12-31T23:59:59"
                 },
-                "doorRight": "1", 
-                "RightPlan": [
-                    {
-                        "doorNo": 1,
-                        "planTemplateNo": 1,
-                        "timeSegment": [
-                            {
-                                "beginTime": "00:00:00",
-                                "endTime": "23:59:59"
-                            }
-                        ]
-                    }
-                ]
             }
         }
 
