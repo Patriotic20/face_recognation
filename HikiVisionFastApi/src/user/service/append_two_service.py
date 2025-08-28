@@ -182,6 +182,7 @@ class UserService:
         # Delete from DB only if at least one device succeeded
         if successes:
             await self.service.delete_user(user_id=user_id)
+            await self.user_info_service.delete_user_info_by_user_id(user_id=user_id)
             db_deleted = True
         else:
             db_deleted = False

@@ -3,6 +3,7 @@ from fastapi import HTTPException , status
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..schemas import UserBase , UserUpdate
 from core.models import User , Role
+from .user_info_service import UserInfoService
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
@@ -10,6 +11,7 @@ class UserCrudService:
     def __init__(self , session: AsyncSession):
         self.session = session
         self.service = BasicService(db=self.session)
+        self.user_info_service = UserInfoService(session=self.session)
         
     async def create_user(self, user_data: UserBase):
         return await self.service.create(model=User , obj_items=user_data)
@@ -55,5 +57,6 @@ class UserCrudService:
         return await self.service.update_by_field(item_id=user_id , model=User , field_name="username" , field_value=user_name)
     
     async def delete_user(self , user_id: str):
+        await self.user_info_service.delete_user_info_by_user_id(user_id=user_id)
         return await self.service.delete(model=User , item_id=user_id)
     
