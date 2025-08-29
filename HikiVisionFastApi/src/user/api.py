@@ -36,7 +36,7 @@ async def create_user(
     passport_serial: str | None = Form(None),
     department: str | None = Form(None),
     service: UserService = Depends(get_user_service),
-    _: User = Depends(role_checker("admin")),
+    _: User = Depends(role_checker("admin" , "manager")),
 ):
     return await service.create_and_add_user_with_file(
         username=username,
@@ -53,7 +53,7 @@ async def create_user(
 async def get_by_id(
     user_id: str,
     service: UserService = Depends(get_user_service),
-    _: User = Depends(role_checker("admin")),
+    _: User = Depends(role_checker("admin", "manager")),
 ):
     user_data = await service.get_user_by_id(user_id=user_id)
     return UserMe(
@@ -71,7 +71,7 @@ async def get_users(
     offset: int = Query(0, ge=0),
     administration: bool = Query(False),
     service: UserService = Depends(get_user_service),
-    _: User = Depends(role_checker("admin")),
+    _: User = Depends(role_checker("admin" , "manager")),
 ):
     return await service.get_all_user(administration=administration ,limit=limit, offset=offset)
     
@@ -82,7 +82,7 @@ async def update_user(
     user_id: str,
     new_name: str = Form(...),
     service: UserService = Depends(get_user_service),
-    _: User = Depends(role_checker("admin")),
+    _: User = Depends(role_checker(["admin" , "manager"])),
 ):
     return await service.update_user_and_hiki(user_id=user_id, new_name=new_name)
 
@@ -91,7 +91,7 @@ async def update_user(
 async def delete_user(
     user_id: str,
     service: UserService = Depends(get_user_service),
-    _: User = Depends(role_checker("admin")),
+    _: User = Depends(role_checker(["admin" , "manager"])),
 ):
     return await service.delete_user_in_hiki(user_id=user_id)
 
