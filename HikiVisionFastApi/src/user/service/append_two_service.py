@@ -5,22 +5,25 @@ from .user_info_service import UserInfoService
 from sqlalchemy.ext.asyncio import AsyncSession
 from user.schemas import UserBase, UserCreate , UserInfoBase , UserInfoCreate
 from fastapi import HTTPException, status
+from core.models import UserLog
 from user.utils.make_random_code import make_random_code
 from core.config import settings
 from user.utils.file import save_file
 from user.utils.image import compress_image_for_hikvision
 from auth.utils import get_user
 from urllib.parse import urlparse
+from sqlalchemy import delete
+
 
 class UserService:
     default_devices = [
-        # "192.168.0.51",
-        "192.168.88.101",
-        "192.168.88.102",
-        "192.168.88.103",
-        "192.168.88.104",
-        "192.168.88.105",
-        "192.168.88.106",
+        "192.168.0.51",
+        # "192.168.88.101",
+        # "192.168.88.102",
+        # "192.168.88.103",
+        # "192.168.88.104",
+        # "192.168.88.105",
+        # "192.168.88.106",
     ]
     
     def __init__(self, session: AsyncSession, devices: list[str] | None = None):
@@ -181,8 +184,14 @@ class UserService:
 
         # Delete from DB only if at least one device succeeded
         if successes:
-            await self.service.delete_user(user_id=user_id)
+            
+            stmt = delete(UserLog).where(UserLog.user_id == user_id)
+            self.session.execute(stmt)
+            await self.session.commit()
+            
             await self.user_info_service.delete_user_info_by_user_id(user_id=user_id)
+            await self.service.delete_user(user_id=user_id)
+
             db_deleted = True
         else:
             db_deleted = False

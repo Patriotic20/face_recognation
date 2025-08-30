@@ -82,7 +82,7 @@ async def update_user(
     user_id: str,
     new_name: str = Form(...),
     service: UserService = Depends(get_user_service),
-    _: User = Depends(role_checker(["admin" , "manager"])),
+    _: User = Depends(role_checker("admin" , "manager")),
 ):
     return await service.update_user_and_hiki(user_id=user_id, new_name=new_name)
 
@@ -91,7 +91,7 @@ async def update_user(
 async def delete_user(
     user_id: str,
     service: UserService = Depends(get_user_service),
-    _: User = Depends(role_checker(["admin" , "manager"])),
+    _: User = Depends(role_checker("admin" , "manager")),
 ):
     return await service.delete_user_in_hiki(user_id=user_id)
 
