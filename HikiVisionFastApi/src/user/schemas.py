@@ -5,7 +5,7 @@ class UserBase(BaseModel):
     id: str
     username: str
     image_path: str | None
-    role_name: str
+    role_name: str | None
 
     model_config = ConfigDict(from_attributes=True)  
 
