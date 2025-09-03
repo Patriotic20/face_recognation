@@ -1,7 +1,8 @@
-from core.utils.basic_service import BasicService
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import delete , select
+
+from core.utils.basic_service import BasicService
 from core.models.user_info import UserInfo
-from sqlalchemy import delete
 from user.schemas import UserInfoBase , UserInfoCreate
 
 
@@ -20,7 +21,13 @@ class UserInfoService:
         return await self.service.get_by_field(model=UserInfo , field_name="user_id" ,  field_value=user_id)
     
     async def get_all_user_info(self , limit: int = 20, offset: int = 0):
-        return await self.service.get_all(model=UserInfo , limit=limit , offset=offset)
+        stmt = (
+            select(UserInfo)
+            .limit(limit)
+            .offset(offset)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
     
     async def update_user_info(
         self, 

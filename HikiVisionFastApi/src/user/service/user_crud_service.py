@@ -45,12 +45,24 @@ class UserCrudService:
 
         stmt = (
             select(User)
+            .options(
+                joinedload(User.role)
+            )
             .where(*condition)
             .limit(limit)
             .offset(offset)
         )
         result = await self.session.execute(stmt)
-        return result.scalars().all()
+        users = result.scalars().all()
+        
+        return [
+            {
+                "id": user.id,
+                "username": user.username,
+                "image_path": user.image_path,
+                "role_name": user.role.name if user.role else None
+            } for user in users
+        ]
 
         
     async def update_user(self, user_id: int , user_name: str):
