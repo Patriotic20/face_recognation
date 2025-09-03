@@ -124,8 +124,8 @@ class UserLogService:
                         info.third_name,
                         info.passport_serial,
                         info.department,
-                        log.enter_time,
-                        log.exit_time,
+                        log.enter_time.strftime("%Y-%m-%d %H:%M:%S") if log.enter_time else None,
+                        log.exit_time.strftime("%Y-%m-%d %H:%M:%S") if log.exit_time else None,
                     ])
             else:
                 ws.append([
