@@ -22,7 +22,7 @@ def get_user_log_service(session: AsyncSession = Depends(db_helper.session_gette
 async def get_all_user_logs(
     limit: int = 20,
     offset: int = 0,
-    user_id: int | None = None,
+    user_id: str | None = None,
     enter_time: datetime | None = None,
     exit_time: datetime | None = None,
     service: UserLogService = Depends(get_user_log_service),
