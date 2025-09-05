@@ -63,6 +63,7 @@ class BasicService(Generic[ModelType, SchemaType]):
             log.exception(f"Failed to fetch all {model.__name__}")
             await self.db.rollback()
             raise e
+        
 
     async def get_by_field(
         self, model: Type[ModelType], field_name: str, field_value: Any

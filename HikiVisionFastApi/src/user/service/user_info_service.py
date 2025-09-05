@@ -1,9 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import delete , select
+from sqlalchemy import delete , select, and_
+from fastapi import HTTPException , status
 
 from core.utils.basic_service import BasicService
 from core.models.user_info import UserInfo
 from user.schemas import UserInfoBase , UserInfoCreate
+
 
 
 class UserInfoService:
@@ -16,10 +18,7 @@ class UserInfoService:
     
     async def get_user_info_by_id(self , user_info_id: int):
         return await self.service.get_by_id(model=UserInfo , item_id=user_info_id)
-    
-    async def get_user_info_by_user_id(self , user_id: str):
-        return await self.service.get_by_field(model=UserInfo , field_name="user_id" ,  field_value=user_id)
-    
+        
     async def get_all_user_info(self , limit: int = 20, offset: int = 0):
         stmt = (
             select(UserInfo)

@@ -1,5 +1,5 @@
 from datetime import datetime , timezone , timedelta
-from sqlalchemy import select , desc
+from sqlalchemy import select , desc , and_
 from sqlalchemy.orm import joinedload , selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from openpyxl import Workbook
@@ -24,19 +24,30 @@ class UserLogService:
             select(UserLog)
             .where(
                 UserLog.user_id == user_log_create.user_id,
-                UserLog.exit_time.is_(None)  # unfinished log
+                UserLog.exit_time.is_(None)  
             )
-            .order_by(desc(UserLog.enter_time))  # latest unfinished entry
+            .order_by(desc(UserLog.enter_time))  
             .limit(1)
         )
-        
+
         result = await self.session.execute(stmt)
         user_log_data = result.scalars().first()
+
         
-        if user_log_data:
-            return {"message": "You haven't exited yet, so you can't enter again."}
-            
-        return await self.service.create(model=UserLog, obj_items=user_log_create)
+        if not user_log_data:
+            return await self.service.create(model=UserLog, obj_items=user_log_create)
+
+        
+        current_date = datetime.now().date()
+        date_from_ip = user_log_data.enter_time.date()
+
+        if date_from_ip < current_date:
+
+            return await self.service.create(model=UserLog, obj_items=user_log_create)
+
+        
+        return {"message": "You haven't exited yet, so you can't enter again."}
+
 
     
     async def get_user_logs_by_id(self,  user_log_id: int):
@@ -48,16 +59,30 @@ class UserLogService:
     async def get_all_user_logs(
         self,
         limit: int = 10,
-        offset: int = 0
-        ):
+        offset: int = 0,
+        user_id: int | None = None,
+        enter_time: datetime | None = None,
+        exit_time: datetime | None = None,
+    ):
+        filters = []
+
+        if user_id:
+            filters.append(UserLog.user_id == user_id)
+        if enter_time:
+            filters.append(UserLog.enter_time == enter_time)
+        if exit_time:
+            filters.append(UserLog.exit_time == exit_time)
+
         stmt = (
             select(UserLog)
-            .options(
-                joinedload(UserLog.user)
-            )
+            .options(joinedload(UserLog.user))
             .limit(limit)
             .offset(offset)
         )
+
+        if filters:
+            stmt = stmt.where(and_(*filters))
+
         result = await self.session.execute(stmt)
         return result.scalars().all()
         

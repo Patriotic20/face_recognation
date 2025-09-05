@@ -188,7 +188,7 @@ class UserService:
         if successes:
             
             stmt = delete(UserLog).where(UserLog.user_id == user_id)
-            self.session.execute(stmt)
+            await self.session.execute(stmt)
             await self.session.commit()
             
             await self.user_info_service.delete_user_info_by_user_id(user_id=user_id)
