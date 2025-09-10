@@ -30,10 +30,25 @@ async def get_user_info_by_id(
 async def get_all(
     limit: int = 20,
     offset: int = 0,
+    user_id: str | None = None,
+    first_name: str | None = None,
+    last_name: str | None = None,
+    third_name: str | None = None,
+    department: str | None = None,
+    passport_serial: str | None = None,
     service: UserInfoService = Depends(get_user_info_service),
     _: User = Depends(role_checker("admin")),
 ):
-    return await service.get_all_user_info(limit=limit , offset=offset)
+    return await service.get_all_user_info(
+        limit=limit,
+        offset=offset,
+        user_id=user_id,
+        first_name=first_name,
+        last_name=last_name,
+        third_name=third_name,
+        department=department,
+        passport_serial=passport_serial,
+    )
 
 @router.put("/update")
 async def update(
