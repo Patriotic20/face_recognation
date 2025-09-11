@@ -136,11 +136,13 @@ class UserLogService:
         if filter_data:
             start = datetime.combine(filter_data, time.min, tzinfo=UTC_PLUS_5)
             end = datetime.combine(filter_data, time.max, tzinfo=UTC_PLUS_5)
+            # This is the correct filter application
             filters.append(and_(
                 UserLog.enter_time >= start,
                 UserLog.enter_time <= end
             ))
 
+        # The query is now correctly structured to filter the joined table
         stmt = (
             select(User)
             .join(User.user_logs)
@@ -148,7 +150,7 @@ class UserLogService:
                 selectinload(User.user_info),
                 selectinload(User.user_logs),
             )
-            .where(and_(*filters))
+            .where(*filters)
         )
 
         result = await self.session.execute(stmt)

@@ -44,7 +44,6 @@ async def create_exel(
     service: UserLogService = Depends(get_user_log_service),
     _: User = Depends(role_checker("admin"))  
 ):
-    
     filter_date_only = filter_date.date() if filter_date else None
     excel_stream: BytesIO = await service.make_exel_file(filter_data=filter_date_only)
     return StreamingResponse(
@@ -52,5 +51,5 @@ async def create_exel(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": 'attachment; filename="users.xlsx"'}
     )
-    
+
 
