@@ -1,4 +1,4 @@
-from datetime import datetime , timezone , timedelta , date
+from datetime import datetime , timezone , timedelta , date , time
 from sqlalchemy import select , desc , and_  , func
 from sqlalchemy.orm import joinedload , selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -130,19 +130,21 @@ class UserLogService:
         pass
 
     
-    async def make_exel_file(
-        self, 
-        filter_data: date | None = None
-    ) -> BytesIO:
+    async def make_exel_file(self, filter_data: date | None = None) -> BytesIO:
         filters = []
-        
-        # Filter by date only
+
         if filter_data:
-            filters.append(func.date(UserLog.enter_time) == filter_data)
+            # Convert date to start and end datetimes in UTC+5
+            start = UTC_PLUS_5.localize(datetime.combine(filter_data, time.min))
+            end = start + timedelta(days=1)
+            filters.append(and_(
+                UserLog.enter_time >= start,
+                UserLog.enter_time < end
+            ))
 
         stmt = (
             select(User)
-            .join(User.user_logs)  # ensure filtering applies
+            .join(User.user_logs)
             .options(
                 selectinload(User.user_info),
                 selectinload(User.user_logs),
@@ -153,12 +155,10 @@ class UserLogService:
         result = await self.session.execute(stmt)
         users = result.scalars().unique().all()
 
-        # Create Excel workbook
         wb = Workbook()
         ws = wb.active
         ws.title = "Users"
 
-        # Header row
         header = [
             "First_name",
             "Last_name",
@@ -172,11 +172,10 @@ class UserLogService:
         ]
         ws.append(header)
 
-        # Fill data
         for user in users:
             info = user.user_info
             if not info:
-                continue  # skip if user_info is missing
+                continue
 
             if user.user_logs:
                 for log in user.user_logs:
@@ -207,9 +206,7 @@ class UserLogService:
                     None,
                 ])
 
-        # Write workbook to BytesIO
         stream = BytesIO()
         wb.save(stream)
         stream.seek(0)
         return stream
-
