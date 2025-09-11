@@ -19,13 +19,13 @@ from auth.utils import get_user
 
 class UserService:
     default_devices = [
-        # "192.168.0.51",
-        "192.168.88.101",
-        "192.168.88.102",
-        "192.168.88.103",
-        "192.168.88.104",
-        "192.168.88.105",
-        "192.168.88.106",
+        "192.168.0.104",
+        # "192.168.88.101",
+        # "192.168.88.102",
+        # "192.168.88.103",
+        # "192.168.88.104",
+        # "192.168.88.105",
+        # "192.168.88.106",
     ]
     
     def __init__(self, session: AsyncSession, devices: list[str] | None = None):
@@ -77,8 +77,6 @@ class UserService:
     async def create_and_add_user(self, user_data: UserCreate):
         user_id = make_random_code()
         
-        
-
         # Create user
         user = await self.service.create_user(
             user_data=UserBase(
@@ -114,6 +112,7 @@ class UserService:
                 user_id=str(user.id),
                 user_name=user.username,
                 image_path=image_url_path,
+                device_ids=[1]  
             ):
                 successes.append(client.ip_address)
             else:

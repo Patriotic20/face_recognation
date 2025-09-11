@@ -8,8 +8,8 @@ from core.utils.db_helper import db_helper
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
-RABBIT_URL = "amqp://guest:guest@rabbitmq:5672/"
-# RABBIT_URL = "amqp://guest:guest@localhost"
+# RABBIT_URL = "amqp://guest:guest@rabbitmq:5672/"
+RABBIT_URL = "amqp://guest:guest@localhost"
 QUEUE_NAME = "camera_events"
 
 class Event(BaseModel):

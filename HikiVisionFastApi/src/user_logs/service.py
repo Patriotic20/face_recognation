@@ -20,6 +20,7 @@ class UserLogService:
         self.service = BasicService(db=self.session)
     
     async def create_user_logs(self, user_log_create: UserLogEnterCreate):
+        
         stmt = (
             select(UserLog)
             .where(
@@ -109,12 +110,21 @@ class UserLogService:
         result = await self.session.execute(stmt)
         user_log_data = result.scalars().first()
 
-        if user_log_data:
+        if not user_log_data:
+            return {"message": "You haven't entered, so you cannot exit."}
+        
+        
+        enter_date = user_log_data.enter_time.date()
+        exit_date = exit_time.date()    
+            
+
+        if enter_date == exit_date:
             user_log_data.exit_time = exit_time
             await self.session.commit()
             return user_log_data
         else:
-            return {"message": "You haven't entered, so you cannot exit."}
+            return {"message": "Exit time must be on the same day as enter time."}
+        
 
     async def delete_user_logs(self):
         pass

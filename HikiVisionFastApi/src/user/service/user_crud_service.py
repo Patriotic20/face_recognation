@@ -1,8 +1,8 @@
 from core.utils.basic_service import BasicService
 from fastapi import HTTPException , status
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..schemas import UserBase , UserUpdate
-from core.models import User , Role
+from ..schemas import UserBase 
+from core.models import User 
 from .user_info_service import UserInfoService
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload

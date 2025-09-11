@@ -19,19 +19,22 @@ class HikiUserService:
         # Always use digest auth
         self.auth = httpx.DigestAuth(self.username, self.password)
 
-    async def create_user(self, user_id: str, user_name: str) -> bool:
-        """Create a user in Hikvision device."""
+    async def create_user(self, user_id: str, user_name: str, device_ids: list[int]) -> bool:
         payload = {
             "UserInfo": {
                 "employeeNo": user_id,
                 "name": user_name,
                 "userType": "normal",
                 "gender": "unknown",
+                "enable": True,
                 "Valid": {
                     "enable": True,
                     "beginTime": "2020-01-01T00:00:00",
                     "endTime": "2037-12-31T23:59:59"
-                },
+                }
+            },
+            "AccessRight": {
+                "deviceIDs": device_ids
             }
         }
 
@@ -89,9 +92,8 @@ class HikiUserService:
                 print(f"❌ Unexpected error: {e}")
         return False
 
-    async def register_with_face(self, user_id: str, user_name: str, image_path: str) -> bool:
-        """High-level method to register user and upload face image."""
-        user_created = await self.create_user(user_id, user_name)
+    async def register_with_face(self, user_id: str, user_name: str, image_path: str, device_ids: list[int]) -> bool:
+        user_created = await self.create_user(user_id, user_name, device_ids)
         if user_created:
             return await self.upload_face_image(user_id, image_path)
         return False
