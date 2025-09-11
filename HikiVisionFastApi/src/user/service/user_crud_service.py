@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..schemas import UserBase 
 from core.models import User 
 from .user_info_service import UserInfoService
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from sqlalchemy.orm import joinedload
 
 class UserCrudService:
@@ -35,33 +35,37 @@ class UserCrudService:
         return user_data
 
         
-    async def get_all_users(
-        self, administration: bool, limit: int = 20, offset: int = 0
-    ):
+    async def get_all_users(self, administration: bool, username: str | None = None, limit: int = 20, offset: int = 0):
+        conditions = []
+
         if administration:
-            condition = (User.role_id.is_not(None), User.password.is_not(None))
+            conditions.append(User.role_id.is_not(None))
+            conditions.append(User.password.is_not(None))
+        elif username:
+            conditions.append(User.username == username)
         else:
-            condition = (User.role_id.is_(None), User.password.is_(None))
+            conditions.append(User.role_id.is_(None))
+            conditions.append(User.password.is_(None))
 
         stmt = (
             select(User)
-            .options(
-                joinedload(User.role)
-            )
-            .where(*condition)
+            .options(joinedload(User.role))
+            .where(and_(*conditions))  # combine all conditions with AND
             .limit(limit)
             .offset(offset)
         )
+
         result = await self.session.execute(stmt)
         users = result.scalars().all()
-        
+
         return [
             {
                 "id": user.id,
                 "username": user.username,
                 "image_path": user.image_path,
                 "role_name": user.role.name if user.role else None
-            } for user in users
+            }
+            for user in users
         ]
 
         
