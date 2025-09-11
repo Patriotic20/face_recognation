@@ -12,48 +12,48 @@ from producer import init_rabbit , close_rabbit , publish_event
 
 CAMERAS = [
     
+    {
+        "device_ip": "192.168.0.104",
+        "username": settings.camera.username,
+        "password": settings.camera.password,
+        "camera_type": "enter"
+    }
     # {
-    #     "device_ip": "192.168.0.51",
+    #     "device_ip": "192.168.88.101",
     #     "username": settings.camera.username,
     #     "password": settings.camera.password,
     #     "camera_type": "enter"
+    # },
+    # {
+    #     "device_ip": "192.168.88.102",
+    #     "username": settings.camera.username,
+    #     "password": settings.camera.password,
+    #     "camera_type": "exit"
+    # },
+    # {
+    #     "device_ip": "192.168.88.103",
+    #     "username": settings.camera.username,
+    #     "password": settings.camera.password,
+    #     "camera_type": "enter"
+    # },
+    # {
+    #     "device_ip": "192.168.88.104",
+    #     "username": settings.camera.username,
+    #     "password": settings.camera.password,
+    #     "camera_type": "exit"
+    # },
+    # {
+    #     "device_ip": "192.168.88.105",
+    #     "username": settings.camera.username,
+    #     "password": settings.camera.password,
+    #     "camera_type": "enter"
+    # },
+    # {
+    #     "device_ip": "192.168.88.106",
+    #     "username": settings.camera.username,
+    #     "password": settings.camera.password,
+    #     "camera_type": "exit"
     # }
-    {
-        "device_ip": "192.168.88.101",
-        "username": settings.camera.username,
-        "password": settings.camera.password,
-        "camera_type": "enter"
-    },
-    {
-        "device_ip": "192.168.88.102",
-        "username": settings.camera.username,
-        "password": settings.camera.password,
-        "camera_type": "exit"
-    },
-    {
-        "device_ip": "192.168.88.103",
-        "username": settings.camera.username,
-        "password": settings.camera.password,
-        "camera_type": "enter"
-    },
-    {
-        "device_ip": "192.168.88.104",
-        "username": settings.camera.username,
-        "password": settings.camera.password,
-        "camera_type": "exit"
-    },
-    {
-        "device_ip": "192.168.88.105",
-        "username": settings.camera.username,
-        "password": settings.camera.password,
-        "camera_type": "enter"
-    },
-    {
-        "device_ip": "192.168.88.106",
-        "username": settings.camera.username,
-        "password": settings.camera.password,
-        "camera_type": "exit"
-    }
 ]
 
 
