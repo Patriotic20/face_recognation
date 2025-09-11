@@ -1,5 +1,5 @@
 from datetime import datetime , timezone , timedelta , date , time
-from sqlalchemy import select , desc , and_  , func
+from sqlalchemy import select , desc , and_  , exists , not_
 from sqlalchemy.orm import joinedload , selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from openpyxl import Workbook
@@ -130,33 +130,43 @@ class UserLogService:
         pass
 
     
-    async def make_exel_file(self, filter_data: date | None = None) -> BytesIO:
-        filters = []
+    async def make_exel_file(
+        self, 
+        filter_data: date | None = None,
+        attended_come: bool = True
+        ) -> BytesIO:
 
-        if filter_data:
-            start = datetime.combine(filter_data, time.min, tzinfo=UTC_PLUS_5)
-            end = datetime.combine(filter_data, time.max, tzinfo=UTC_PLUS_5)
-            # This is the correct filter application
-            filters.append(and_(
-                UserLog.enter_time >= start,
-                UserLog.enter_time <= end
-            ))
-
-        # The query is now correctly structured to filter the joined table
         stmt = (
             select(User)
-            .join(User.user_logs)
             .options(
                 selectinload(User.user_info),
                 selectinload(User.user_logs),
             )
-            .where(*filters)
         )
+        
+        if filter_data:
+            start = datetime.combine(filter_data, time.min, tzinfo=UTC_PLUS_5)
+            end = datetime.combine(filter_data, time.max, tzinfo=UTC_PLUS_5)
 
+            # Subquery: does user have logs that day?
+            log_exists = (
+                select(UserLog.id)
+                .where(
+                    UserLog.user_id == User.id,
+                    UserLog.enter_time >= start,
+                    UserLog.enter_time <= end,
+                )
+            )
+            
+            if attended_come:
+                stmt = stmt.where(exists(log_exists))
+            else:
+                stmt = stmt.where(not_(exists(log_exists)))
+                
+                
         result = await self.session.execute(stmt)
         users = result.scalars().unique().all()
-
-        # Excel generation
+        
         wb = Workbook()
         ws = wb.active
         ws.title = "Users"
@@ -179,8 +189,16 @@ class UserLogService:
             if not info:
                 continue
 
-            if user.user_logs:
-                for log in user.user_logs:
+            # Only logs in selected day if filter_data given
+            logs = user.user_logs
+            if filter_data:
+                logs = [
+                    l for l in logs
+                    if l.enter_time and start <= l.enter_time <= end
+                ]
+
+            if logs:
+                for log in logs:
                     ent = log.enter_time.astimezone(UTC_PLUS_5) if log.enter_time else None
                     ext = log.exit_time.astimezone(UTC_PLUS_5) if log.exit_time else None
 
@@ -196,6 +214,7 @@ class UserLogService:
                         ext.strftime("%H:%M:%S") if ext else None,
                     ])
             else:
+                # User has no logs (or filtered out)
                 ws.append([
                     info.first_name,
                     info.last_name,

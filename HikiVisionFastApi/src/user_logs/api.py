@@ -40,12 +40,12 @@ async def get_all_user_logs(
 
 @router.post("/create/exel")
 async def create_exel(
-    filter_date: datetime | None = Query(None, description="Filter by datetime"),
+    filter_data: date | None = None,
+    attended_come: bool = True,
     service: UserLogService = Depends(get_user_log_service),
     _: User = Depends(role_checker("admin"))  
 ):
-    filter_date_only = filter_date.date() if filter_date else None
-    excel_stream: BytesIO = await service.make_exel_file(filter_data=filter_date_only)
+    excel_stream: BytesIO = await service.make_exel_file(filter_data=filter_data, attended_come=attended_come)
     return StreamingResponse(
         excel_stream,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
