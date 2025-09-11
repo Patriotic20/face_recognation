@@ -70,9 +70,10 @@ async def get_users(
     offset: int = Query(0, ge=0),
     administration: bool = Query(False),
     service: UserService = Depends(get_user_service),
+    username: str | None = None,
     _: User = Depends(role_checker("admin" , "manager")),
 ):
-    return await service.get_all_user(administration=administration ,limit=limit, offset=offset)
+    return await service.get_all_user(administration=administration ,limit=limit, offset=offset, username=username)
     
 
 
