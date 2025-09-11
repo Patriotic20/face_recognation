@@ -1,5 +1,5 @@
 from datetime import datetime , timezone , timedelta , date
-from sqlalchemy import select , desc , and_ 
+from sqlalchemy import select , desc , and_  , func
 from sqlalchemy.orm import joinedload , selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from openpyxl import Workbook
@@ -135,14 +135,10 @@ class UserLogService:
         filter_data: date | None = None
     ) -> BytesIO:
         filters = []
+        
+        # Filter by date only
         if filter_data:
-            # use range filtering for performance
-            start = datetime.combine(filter_data, datetime.min.time())
-            end = start + timedelta(days=1)
-            filters.append(and_(
-                UserLog.enter_time >= start,
-                UserLog.enter_time < end
-            ))
+            filters.append(func.date(UserLog.enter_time) == filter_data)
 
         stmt = (
             select(User)
