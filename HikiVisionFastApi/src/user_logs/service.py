@@ -130,7 +130,7 @@ class UserLogService:
         pass
 
     
-    async def make_exel_file_builtin(self, filter_data: date | None = None) -> BytesIO:
+    async def make_exel_file(self, filter_data: date | None = None) -> BytesIO:
         filters = []
 
         if filter_data:
