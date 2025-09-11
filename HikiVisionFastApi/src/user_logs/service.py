@@ -148,7 +148,7 @@ class UserLogService:
                 selectinload(User.user_info),
                 selectinload(User.user_logs),
             )
-            .where(*filters)
+            .where(and_(*filters))
         )
 
         result = await self.session.execute(stmt)
