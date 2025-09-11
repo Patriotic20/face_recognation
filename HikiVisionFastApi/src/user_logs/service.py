@@ -130,16 +130,15 @@ class UserLogService:
         pass
 
     
-    async def make_exel_file(self, filter_data: date | None = None) -> BytesIO:
+    async def make_exel_file_builtin(self, filter_data: date | None = None) -> BytesIO:
         filters = []
 
         if filter_data:
-            # Convert date to start and end datetimes in UTC+5
-            start = UTC_PLUS_5.localize(datetime.combine(filter_data, time.min))
-            end = start + timedelta(days=1)
+            start = datetime.combine(filter_data, time.min, tzinfo=UTC_PLUS_5)
+            end = datetime.combine(filter_data, time.max, tzinfo=UTC_PLUS_5)
             filters.append(and_(
                 UserLog.enter_time >= start,
-                UserLog.enter_time < end
+                UserLog.enter_time <= end
             ))
 
         stmt = (
@@ -155,6 +154,7 @@ class UserLogService:
         result = await self.session.execute(stmt)
         users = result.scalars().unique().all()
 
+        # Excel generation
         wb = Workbook()
         ws = wb.active
         ws.title = "Users"
