@@ -1,6 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import delete , select, and_
-from fastapi import HTTPException , status
 
 from core.utils.basic_service import BasicService
 from core.models.user_info import UserInfo

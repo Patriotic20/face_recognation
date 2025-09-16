@@ -6,8 +6,9 @@ from openpyxl import Workbook
 from io import BytesIO
 
 from core.utils.basic_service import BasicService
-from core.models import UserLog , UserInfo , User
+from core.models import UserLog , User
 from .schemas import UserLogEnterCreate 
+from .utils import admin_enter, admin_exit
 
 
 
@@ -20,14 +21,10 @@ class UserLogService:
         self.service = BasicService(db=self.session)
     
     async def create_user_logs(self, user_log_create: UserLogEnterCreate):
-        
         stmt = (
             select(UserLog)
-            .where(
-                UserLog.user_id == user_log_create.user_id,
-                UserLog.exit_time.is_(None)  
-            )
-            .order_by(desc(UserLog.enter_time))  
+            .where(UserLog.user_id == user_log_create.user_id)
+            .order_by(desc(UserLog.enter_time))
             .limit(1)
         )
 
@@ -35,19 +32,25 @@ class UserLogService:
         user_log_data = result.scalars().first()
 
         
+        user_log_create = await admin_enter(session=self.session, admin_data=user_log_create)
+
+        # Case 1: No logs → create new
         if not user_log_data:
             return await self.service.create(model=UserLog, obj_items=user_log_create)
 
-        
-        current_date = datetime.now().date()
-        date_from_ip = user_log_data.enter_time.date()
-
-        if date_from_ip < current_date:
-
+        # Case 2: Last log already closed → create new
+        if user_log_data.exit_time is not None:
             return await self.service.create(model=UserLog, obj_items=user_log_create)
 
-        
+        # Case 3: Last log open but from previous day → create new
+        current_date = datetime.now().date()
+        enter_date = user_log_data.enter_time.date()
+        if enter_date < current_date:
+            return await self.service.create(model=UserLog, obj_items=user_log_create)
+
+        # Case 4: Last log open today → reject
         return {"message": "You haven't exited yet, so you can't enter again."}
+
 
 
     
@@ -103,7 +106,7 @@ class UserLogService:
                 UserLog.user_id == user_id,
                 UserLog.exit_time.is_(None)
             )
-            .order_by(desc(UserLog.enter_time))  
+            .order_by(desc(UserLog.enter_time))
             .limit(1)
         )
 
@@ -112,22 +115,25 @@ class UserLogService:
 
         if not user_log_data:
             return {"message": "You haven't entered, so you cannot exit."}
-        
-        
+
         enter_date = user_log_data.enter_time.date()
-        exit_date = exit_time.date()    
-            
+        exit_date = exit_time.date()
+
+        # Always process exit_time with admin_exit before saving
+        user_exit_time = await admin_exit(
+            user_id=user_id,
+            admin_exit_time=exit_time,
+            session=self.session
+        )
 
         if enter_date == exit_date:
-            user_log_data.exit_time = exit_time
+            # ✅ Same day → save exit_time
+            user_log_data.exit_time = user_exit_time
             await self.session.commit()
             return user_log_data
-        else:
-            return {"message": "Exit time must be on the same day as enter time."}
-        
 
-    async def delete_user_logs(self):
-        pass
+        # ❌ Different day → still reject, but processed via admin_exit
+        return {"message": "Exit time must be on the same day as enter time."}
 
     
     async def make_exel_file(

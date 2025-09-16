@@ -10,6 +10,11 @@ class UserLogBase(BaseModel):
 class UserLogEnterCreate(BaseModel):
     user_id: str | None = None
     enter_time: datetime
+    
+    
+class UserLogExitCreate(BaseModel):
+    user_id: str | None = None
+    exit_time: datetime
 
 
 
