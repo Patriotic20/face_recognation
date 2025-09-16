@@ -8,7 +8,7 @@ from io import BytesIO
 from core.utils.basic_service import BasicService
 from core.models import UserLog , User
 from .schemas import UserLogEnterCreate 
-from .utils import admin_enter, admin_exit
+
 
 
 
@@ -31,8 +31,6 @@ class UserLogService:
         result = await self.session.execute(stmt)
         user_log_data = result.scalars().first()
 
-        
-        user_log_create = await admin_enter(session=self.session, admin_data=user_log_create)
 
         # Case 1: No logs → create new
         if not user_log_data:
@@ -100,40 +98,32 @@ class UserLogService:
         return await self.service.update_by_field(model=UserLog, user_id=user_id , field_name=field_name , field_value=field_value)
     
     async def update_user_log_exit_time(self, user_id: str, exit_time: datetime):
-        stmt = (
-            select(UserLog)
-            .where(
-                UserLog.user_id == user_id,
-                UserLog.exit_time.is_(None)
+            stmt = (
+                select(UserLog)
+                .where(
+                    UserLog.user_id == user_id,
+                    UserLog.exit_time.is_(None)
+                )
+                .order_by(desc(UserLog.enter_time))
+                .limit(1)
             )
-            .order_by(desc(UserLog.enter_time))
-            .limit(1)
-        )
 
-        result = await self.session.execute(stmt)
-        user_log_data = result.scalars().first()
+            result = await self.session.execute(stmt)
+            user_log_data = result.scalars().first()
 
-        if not user_log_data:
-            return {"message": "You haven't entered, so you cannot exit."}
+            if not user_log_data:
+                return {"message": "You haven't entered, so you cannot exit."}
 
-        enter_date = user_log_data.enter_time.date()
-        exit_date = exit_time.date()
+            enter_date = user_log_data.enter_time.date()
+            exit_date = exit_time.date()
 
-        # Always process exit_time with admin_exit before saving
-        user_exit_time = await admin_exit(
-            user_id=user_id,
-            admin_exit_time=exit_time,
-            session=self.session
-        )
+            if enter_date > exit_date:
+                return {"message": "Exit time must be on the same day or after the enter time."}
 
-        if enter_date == exit_date:
-            # ✅ Same day → save exit_time
-            user_log_data.exit_time = user_exit_time
+            # ✅ Allow same day or later day
+            user_log_data.exit_time = exit_time
             await self.session.commit()
             return user_log_data
-
-        # ❌ Different day → still reject, but processed via admin_exit
-        return {"message": "Exit time must be on the same day as enter time."}
 
     
     async def make_exel_file(
